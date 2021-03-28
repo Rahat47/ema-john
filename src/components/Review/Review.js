@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { getDatabaseCart, removeFromDatabaseCart, processOrder } from '../../utilities/databaseManager';
-import fakeData from '../../fakeData';
 import ReviewItem from '../ReviewItem/ReviewItem';
 import Cart from '../Cart/Cart';
 import happyImage from '../../images/giphy.gif';
@@ -21,33 +20,43 @@ const Review = () => {
         removeFromDatabaseCart(productKey);
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         //cart
         const savedCart = getDatabaseCart();
         const productKeys = Object.keys(savedCart);
+        async function getSpecificProducts() {
+            try {
+                const response = await fetch("http://localhost:5000/products-by-key", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(productKeys)
+                })
+                const data = await response.json()
+                setCart(data)
+            } catch (error) {
+                console.log(error)
+            }
 
-        const cartProducts =  productKeys.map( key => {
-            const product = fakeData.find( pd => pd.key === key);
-            product.quantity = savedCart[key];
-            return product;
-        });
-        setCart(cartProducts);
+        }
+        getSpecificProducts()
     }, []);
 
     let thankyou;
-    if(orderPlaced){
-        thankyou = <img src={happyImage} alt=""/>
-    } 
+    if (orderPlaced) {
+        thankyou = <img src={happyImage} alt="" />
+    }
     return (
         <div className="twin-container">
             <div className="product-container">
                 {
-                    cart.map(pd => <ReviewItem 
+                    cart.map(pd => <ReviewItem
                         key={pd.key}
-                        removeProduct = {removeProduct}
+                        removeProduct={removeProduct}
                         product={pd}></ReviewItem>)
                 }
-                { thankyou }
+                {thankyou}
             </div>
             <div className="cart-container">
                 <Cart cart={cart}>
